@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Mírame</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#000;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  overflow:hidden;
+}
+.stage {
+  position:relative;
+  width:100%;
+  max-width:680px;
+  aspect-ratio:680/560;
+}
+svg { display:block; width:100%; height:100%; }
+
+/* TIMING TOTAL: 38s
+   Escena 1 (rosa):   0–13s
+   Escena 2 (cumple): 13–25s
+   Escena 3 (texto):  25–38s  */
+
+.scene1 { animation: sc1 38s ease-in-out infinite; }
+@keyframes sc1 {
+  0%   { opacity:0; }
+  4%   { opacity:1; }
+  32%  { opacity:1; }
+  36%  { opacity:0; }
+  100% { opacity:0; }
+}
+.scene2 { animation: sc2 38s ease-in-out infinite; }
+@keyframes sc2 {
+  0%,34% { opacity:0; }
+  40%    { opacity:1; }
+  62%    { opacity:1; }
+  66%    { opacity:0; }
+  100%   { opacity:0; }
+}
+.scene3 { animation: sc3 38s ease-in-out infinite; }
+@keyframes sc3 {
+  0%,64% { opacity:0; }
+  70%    { opacity:1; }
+  96%    { opacity:1; }
+  100%   { opacity:0; }
+}
+
+.flash {
+  position:absolute; inset:0;
+  background:#fff8e0; opacity:0; pointer-events:none;
+  animation: fl 38s ease-in-out infinite;
+}
+@keyframes fl {
+  0%,33%  { opacity:0; }
+  35%     { opacity:0.35; }
+  39%     { opacity:0; }
+  63%     { opacity:0; }
+  65%     { opacity:0.35; }
+  69%     { opacity:0; }
+  100%    { opacity:0; }
+}
+
+#startBtn {
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  background:linear-gradient(135deg,#1a0a3a,#000010);
+  color:#ffd966;
+  border:2px solid #cc9900;
+  padding:18px 40px;
+  font-size:18px;
+  font-family:Georgia,serif;
+  font-weight:bold;
+  border-radius:4px;
+  cursor:pointer;
+  box-shadow:0 0 30px rgba(255,210,80,0.4);
+  z-index:100;
+  letter-spacing:2px;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.replay {
+  position:absolute; bottom:10px; right:10px;
+  background:rgba(255,220,100,0.12);
+  border:1px solid #cc9900; color:#ffd966;
+  padding:6px 14px; border-radius:4px;
+  cursor:pointer; font-family:Georgia,serif; font-size:13px;
+  display:none; z-index:10;
+}
+.replay.show { display:block; }
+
+/* ===== ANIMACIONES ===== */
+@keyframes tw1 { 0%,100%{opacity:0.2} 50%{opacity:1} }
+@keyframes tw2 { 0%,100%{opacity:0.4} 50%{opacity:0.9} }
+@keyframes tw3 { 0%,100%{opacity:0.1} 50%{opacity:0.7} }
+@keyframes nebS { 0%,100%{opacity:0.35} 50%{opacity:0.55} }
+@keyframes mwA  { 0%,100%{opacity:0.15} 50%{opacity:0.25} }
+@keyframes rGl  { 0%,100%{filter:drop-shadow(0 0 8px rgba(80,120,255,0.5))} 50%{filter:drop-shadow(0 0 22px rgba(100,150,255,0.9))} }
+@keyframes rFl  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes petS { 0%,100%{opacity:0.85} 50%{opacity:1} }
+@keyframes orb1 { from{transform:rotate(0deg)   translateX(115px) rotate(0deg)}   to{transform:rotate(360deg)  translateX(115px)  rotate(-360deg)} }
+@keyframes orb2 { from{transform:rotate(72deg)  translateX(100px) rotate(-72deg)} to{transform:rotate(432deg)  translateX(100px)  rotate(-432deg)} }
+@keyframes orb3 { from{transform:rotate(144deg) translateX(110px) rotate(-144deg)}to{transform:rotate(504deg)  translateX(110px)  rotate(-504deg)} }
+@keyframes orb4 { from{transform:rotate(216deg) translateX(95px)  rotate(-216deg)}to{transform:rotate(576deg)  translateX(95px)   rotate(-576deg)} }
+@keyframes orb5 { from{transform:rotate(288deg) translateX(108px) rotate(-288deg)}to{transform:rotate(648deg)  translateX(108px)  rotate(-648deg)} }
+@keyframes sf1 { 0%{opacity:0;transform:translate(0,0)} 5%{opacity:1} 20%{opacity:0;transform:translate(200px,100px)} 100%{opacity:0;transform:translate(200px,100px)} }
+@keyframes sf2 { 0%{opacity:0;transform:translate(0,0)} 5%{opacity:1} 20%{opacity:0;transform:translate(-170px,85px)} 100%{opacity:0;transform:translate(-170px,85px)} }
+@keyframes fadeUp { 0%{opacity:0;transform:translateY(12px)} 100%{opacity:1;transform:translateY(0)} }
+@keyframes goldGlow { 0%,100%{filter:drop-shadow(0 0 5px rgba(255,210,80,0.4))} 50%{filter:drop-shadow(0 0 15px rgba(255,220,100,0.95))} }
+@keyframes spt { 0%,100%{opacity:0.2;transform:scale(0.7)} 50%{opacity:1;transform:scale(1.3)} }
+@keyframes lineIn { 0%{opacity:0;transform:translateX(-10px)} 100%{opacity:1;transform:translateX(0)} }
+@keyframes cosG { 0%,100%{filter:drop-shadow(0 0 4px rgba(255,220,100,0.3))} 50%{filter:drop-shadow(0 0 10px rgba(255,220,100,0.85))} }
+
+.t1  { animation:tw1 2.5s ease-in-out infinite; }
+.t2  { animation:tw2 3.2s ease-in-out infinite; }
+.t3  { animation:tw3 1.8s ease-in-out infinite; }
+.nb  { animation:nebS 8s ease-in-out infinite; }
+.mw  { animation:mwA 10s ease-in-out infinite; }
+.rfloat { animation:rFl 5s ease-in-out infinite; transform-origin:340px 280px; }
+.rgl    { animation:rGl 3s ease-in-out infinite; transform-origin:340px 280px; }
+.ps  { animation:petS 4s ease-in-out infinite; }
+.o1  { animation:orb1 12s linear infinite; transform-origin:340px 280px; }
+.o2  { animation:orb2 15s linear infinite; transform-origin:340px 280px; }
+.o3  { animation:orb3 18s linear infinite; transform-origin:340px 280px; }
+.o4  { animation:orb4 14s linear infinite; transform-origin:340px 280px; }
+.o5  { animation:orb5 16s linear infinite; transform-origin:340px 280px; }
+.sp2 { animation:spt 2.2s ease-in-out infinite; }
+.SF1 { animation:sf1 8s ease-in infinite; }
+.SF2 { animation:sf2 9s ease-in infinite 3s; }
+.SF3 { animation:sf1 7s ease-in infinite 1s; }
+.SF4 { animation:sf2 8s ease-in infinite 2s; }
+.SF5 { animation:sf1 9s ease-in infinite 4s; }
+
+/* Textos escena 2 */
+.w1 { animation:fadeUp 1s ease-out 15s both; }
+.w2 { animation:fadeUp 1s ease-out 17s both; }
+.w3 { animation:fadeUp 1s ease-out 19s both; }
+.gg { animation:goldGlow 3s ease-in-out infinite; }
+
+/* Textos escena 3 */
+.p1 { animation:lineIn 1s ease-out 27s   both; }
+.p2 { animation:lineIn 1s ease-out 28.8s both; }
+.p3 { animation:lineIn 1s ease-out 30.5s both; }
+.p4 { animation:lineIn 1s ease-out 32.2s both; }
+.p5 { animation:lineIn 1.2s ease-out 33.8s both; }
+.cg { animation:cosG 3s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+<button id="startBtn" onclick="iniciarTodo(event)">▶ INICIAR</button>
+
+<audio id="audioPlayer" preload="auto" playsinline webkit-playsinline style="display:none;">
+  <source src="cancion.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+function iniciarTodo(e) {
+  if(e) e.preventDefault();
+  var btn   = document.getElementById('startBtn');
+  var audio = document.getElementById('audioPlayer');
+  var cont  = document.getElementById('animContainer');
+  var rb    = document.getElementById('rB');
+  audio.load();
+  cont.style.opacity = '1';
+  audio.volume = 1.0;
+  audio.muted  = false;
+  // Al terminar la canción mostrar botón de repetir
+  audio.addEventListener('ended', function() {
+    rb.classList.add('show');
+  });
+  var p = audio.play();
+  if(p !== undefined) {
+    p.then(function()  { btn.style.display = 'none'; })
+     .catch(function() { btn.style.display = 'none'; });
+  } else {
+    btn.style.display = 'none';
+  }
+}
+</script>
+
+<div class="flash"></div>
+
+<div id="animContainer" style="opacity:0; transition:opacity 0.5s; width:100%; height:100%;">
+<svg viewBox="0 0 680 560" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="cosmos" cx="50%" cy="50%" r="70%">
+    <stop offset="0%"   stop-color="#0a0818"/>
+    <stop offset="40%"  stop-color="#05040f"/>
+    <stop offset="100%" stop-color="#000000"/>
+  </radialGradient>
+  <radialGradient id="neb1" cx="28%" cy="38%" r="55%">
+    <stop offset="0%"   stop-color="#3a1060" stop-opacity="0.5"/>
+    <stop offset="100%" stop-color="#0a0418" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="neb2" cx="72%" cy="62%" r="50%">
+    <stop offset="0%"   stop-color="#0a2060" stop-opacity="0.45"/>
+    <stop offset="100%" stop-color="#020818" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="neb3" cx="55%" cy="22%" r="45%">
+    <stop offset="0%"   stop-color="#401030" stop-opacity="0.3"/>
+    <stop offset="100%" stop-color="#200818" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="mwG" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%"   stop-color="#fff" stop-opacity="0"/>
+    <stop offset="50%"  stop-color="#e8eeff" stop-opacity="0.2"/>
+    <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="rH" cx="50%" cy="50%" r="50%">
+    <stop offset="0%"   stop-color="#88aaff" stop-opacity="0.55"/>
+    <stop offset="100%" stop-color="#2244cc" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="oSp" cx="50%" cy="50%" r="50%">
+    <stop offset="0%"   stop-color="#fff"/>
+    <stop offset="40%"  stop-color="#aaccff" stop-opacity="0.6"/>
+    <stop offset="100%" stop-color="#6699ff" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+
+<!-- FONDO PERMANENTE -->
+<rect width="680" height="560" fill="url(#cosmos)"/>
+<rect width="680" height="560" fill="url(#mwG)" transform="rotate(-30 340 280)" class="mw"/>
+<rect width="680" height="560" fill="url(#neb1)" class="nb"/>
+<rect width="680" height="560" fill="url(#neb2)" class="nb" style="animation-delay:2s"/>
+<rect width="680" height="560" fill="url(#neb3)" class="nb" style="animation-delay:4s"/>
+
+<!-- ESTRELLAS PERMANENTES -->
+<g class="t1">
+  <circle cx="42"  cy="28"  r="0.7" fill="#fff"/>
+  <circle cx="128" cy="55"  r="0.6" fill="#fff"/>
+  <circle cx="215" cy="18"  r="0.8" fill="#fff"/>
+  <circle cx="298" cy="42"  r="0.6" fill="#fff"/>
+  <circle cx="412" cy="22"  r="0.7" fill="#fff"/>
+  <circle cx="498" cy="48"  r="0.8" fill="#fff"/>
+  <circle cx="578" cy="15"  r="0.6" fill="#fff"/>
+  <circle cx="642" cy="38"  r="0.7" fill="#fff"/>
+  <circle cx="22"  cy="110" r="0.6" fill="#fff"/>
+  <circle cx="88"  cy="155" r="0.7" fill="#ffeebb"/>
+  <circle cx="592" cy="118" r="0.7" fill="#ffeebb"/>
+  <circle cx="18"  cy="350" r="0.7" fill="#fff"/>
+  <circle cx="618" cy="380" r="0.7" fill="#fff"/>
+  <circle cx="660" cy="440" r="0.8" fill="#fff"/>
+  <circle cx="95"  cy="505" r="0.6" fill="#fff"/>
+  <circle cx="585" cy="520" r="0.7" fill="#ffeebb"/>
+  <circle cx="145" cy="478" r="0.7" fill="#fff"/>
+  <circle cx="530" cy="490" r="0.6" fill="#fff"/>
+  <circle cx="340" cy="530" r="0.7" fill="#fff"/>
+  <circle cx="440" cy="140" r="0.6" fill="#fff"/>
+  <circle cx="240" cy="148" r="0.7" fill="#ffeebb"/>
+</g>
+<g class="t2">
+  <circle cx="72"  cy="72"  r="0.9" fill="#fffde0"/>
+  <circle cx="178" cy="88"  r="1"   fill="#fff"/>
+  <circle cx="362" cy="65"  r="0.8" fill="#fffde0"/>
+  <circle cx="458" cy="78"  r="1"   fill="#fff"/>
+  <circle cx="538" cy="58"  r="0.9" fill="#fffde0"/>
+  <circle cx="610" cy="95"  r="0.8" fill="#fff"/>
+  <circle cx="38"  cy="195" r="0.9" fill="#fff"/>
+  <circle cx="628" cy="210" r="1"   fill="#fffde0"/>
+  <circle cx="12"  cy="288" r="0.8" fill="#fff"/>
+  <circle cx="668" cy="310" r="0.9" fill="#fffde0"/>
+  <circle cx="28"  cy="465" r="1"   fill="#fff"/>
+  <circle cx="288" cy="68"  r="0.9" fill="#fff"/>
+</g>
+<g class="t3">
+  <circle cx="158" cy="205" r="1.1" fill="#ffeeaa"/>
+  <circle cx="520" cy="185" r="1.2" fill="#fff"/>
+  <circle cx="62"  cy="248" r="1"   fill="#ffeeaa"/>
+  <circle cx="618" cy="268" r="1.1" fill="#fff"/>
+  <circle cx="108" cy="392" r="1.2" fill="#ffeeaa"/>
+  <circle cx="572" cy="415" r="1"   fill="#fff"/>
+  <circle cx="388" cy="525" r="1"   fill="#ffeeaa"/>
+</g>
+<g class="t1">
+  <circle cx="68"  cy="35"  r="1.4" fill="#fff"><animate attributeName="r" values="1.4;2;1.4" dur="3s" repeatCount="indefinite"/></circle>
+  <circle cx="612" cy="42"  r="1.3" fill="#fffde0"><animate attributeName="r" values="1.3;1.9;1.3" dur="4s" repeatCount="indefinite"/></circle>
+  <circle cx="32"  cy="318" r="1.5" fill="#fff"><animate attributeName="r" values="1.5;2.2;1.5" dur="2.5s" repeatCount="indefinite"/></circle>
+  <circle cx="650" cy="355" r="1.4" fill="#fffde0"><animate attributeName="r" values="1.4;2;1.4" dur="3.5s" repeatCount="indefinite"/></circle>
+  <circle cx="148" cy="520" r="1.3" fill="#fff"><animate attributeName="r" values="1.3;1.9;1.3" dur="4s" repeatCount="indefinite" begin="1s"/></circle>
+</g>
+
+<!-- =============================== -->
+<!-- ESCENA 1: ROSA AZUL             -->
+<!-- =============================== -->
+<g class="scene1">
+  <g class="SF1" transform="translate(80,70)">
+    <line x1="0" y1="0" x2="-50" y2="-25" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="2" fill="#fff"/>
+  </g>
+  <g class="SF2" transform="translate(580,55)">
+    <line x1="0" y1="0" x2="42" y2="-22" stroke="#fffde0" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="1.5" fill="#fffde0"/>
+  </g>
+  <circle cx="340" cy="280" r="140" fill="url(#rH)" class="rgl"/>
+  <g class="o1"><circle cx="340" cy="280" r="3.5" fill="url(#oSp)"/></g>
+  <g class="o2"><circle cx="340" cy="280" r="2.8" fill="url(#oSp)"/></g>
+  <g class="o3"><circle cx="340" cy="280" r="3"   fill="url(#oSp)"/></g>
+  <g class="o4"><circle cx="340" cy="280" r="2.5" fill="url(#oSp)" opacity="0.8"/></g>
+  <g class="o5"><circle cx="340" cy="280" r="3.2" fill="url(#oSp)" opacity="0.9"/></g>
+  <g class="rfloat rgl" transform="translate(340,280)">
+    <path d="M 0,20 Q -90,30 -100,-10 Q -95,-60 -60,-75 Q -30,-80 -10,-50 Q -5,-30 0,0 Z" fill="#1838a8" class="ps"/>
+    <path d="M 0,20 Q 90,30 100,-10 Q 95,-60 60,-75 Q 30,-80 10,-50 Q 5,-30 0,0 Z" fill="#1a3ab0" class="ps"/>
+    <path d="M 0,20 Q -40,80 -10,100 Q 20,105 40,85 Q 55,65 20,40 Q 10,25 0,20 Z" fill="#1c3cb5" class="ps"/>
+    <path d="M 0,20 Q 40,80 15,102 Q -15,108 -35,88 Q -50,68 -18,42 Q -8,26 0,20 Z" fill="#1838a8" class="ps"/>
+    <path d="M 0,0 Q -20,-90 0,-105 Q 20,-105 20,-85 Q 10,-60 0,0 Z" fill="#1a3ab0" class="ps"/>
+    <path d="M 0,10 Q -70,15 -78,-18 Q -72,-58 -42,-65 Q -20,-68 -8,-40 Q -3,-22 0,0 Z" fill="#2848c8" class="ps"/>
+    <path d="M 0,10 Q 70,15 78,-18 Q 72,-58 42,-65 Q 20,-68 8,-40 Q 3,-22 0,0 Z" fill="#2a4acc" class="ps"/>
+    <path d="M 0,15 Q -28,65 -5,82 Q 18,88 35,68 Q 45,50 15,30 Q 6,18 0,15 Z" fill="#2848c8" class="ps"/>
+    <path d="M 0,15 Q 28,65 8,84 Q -18,90 -35,70 Q -45,52 -12,32 Q -5,18 0,15 Z" fill="#2a4acc" class="ps"/>
+    <path d="M 0,0 Q -15,-68 0,-80 Q 15,-80 15,-65 Q 8,-45 0,0 Z" fill="#2848c8" class="ps"/>
+    <path d="M 0,5 Q -48,8 -54,-15 Q -50,-45 -28,-50 Q -12,-52 -5,-28 Q -2,-14 0,0 Z" fill="#3858d8" class="ps"/>
+    <path d="M 0,5 Q 48,8 54,-15 Q 50,-45 28,-50 Q 12,-52 5,-28 Q 2,-14 0,0 Z" fill="#3a5adc" class="ps"/>
+    <path d="M 0,8 Q -18,45 -2,58 Q 14,62 26,46 Q 32,32 8,18 Q 3,10 0,8 Z" fill="#3858d8" class="ps"/>
+    <path d="M 0,8 Q 18,45 5,60 Q -12,64 -25,48 Q -30,34 -6,20 Q -2,10 0,8 Z" fill="#3a5adc" class="ps"/>
+    <path d="M 0,-2 Q -10,-48 0,-58 Q 10,-58 10,-45 Q 5,-28 0,-2 Z" fill="#3858d8" class="ps"/>
+    <path d="M 0,2 Q -30,4 -33,-12 Q -30,-32 -16,-35 Q -6,-36 -2,-18 Q -1,-8 0,0 Z" fill="#4a6ae8" class="ps"/>
+    <path d="M 0,2 Q 30,4 33,-12 Q 30,-32 16,-35 Q 6,-36 2,-18 Q 1,-8 0,0 Z" fill="#4c6cec" class="ps"/>
+    <path d="M 0,4 Q -10,28 0,36 Q 10,36 16,24 Q 18,14 4,8 Z" fill="#4a6ae8" class="ps"/>
+    <path d="M 0,4 Q 10,28 2,37 Q -8,38 -14,26 Q -16,16 -3,9 Z" fill="#4c6cec" class="ps"/>
+    <path d="M 0,-1 Q -6,-30 0,-36 Q 6,-36 6,-28 Q 3,-16 0,-1 Z" fill="#4a6ae8" class="ps"/>
+    <path d="M 0,0 Q -18,2 -20,-9 Q -18,-22 -9,-24 Q -3,-24 -1,-12 Q 0,-5 0,0 Z" fill="#6080f5" class="ps"/>
+    <path d="M 0,0 Q 18,2 20,-9 Q 18,-22 9,-24 Q 3,-24 1,-12 Q 0,-5 0,0 Z" fill="#6282f8" class="ps"/>
+    <path d="M 0,2 Q -5,16 2,22 Q 8,22 11,13 Q 12,6 2,3 Z" fill="#6080f5" class="ps"/>
+    <path d="M 0,2 Q 5,16 1,23 Q -5,23 -9,14 Q -10,7 -1,4 Z" fill="#6282f8" class="ps"/>
+    <path d="M 0,0 Q -8,0 -9,-6 Q -8,-14 -3,-15 Q 0,-14 0,-8 Z" fill="#88aaff"/>
+    <path d="M 0,0 Q 8,0 9,-6 Q 8,-14 3,-15 Q 0,-14 0,-8 Z" fill="#8aacff"/>
+    <path d="M 0,0 Q -2,8 2,11 Q 5,10 6,5 Z" fill="#88aaff"/>
+    <path d="M 0,0 Q 2,8 -1,11 Q -4,10 -5,5 Z" fill="#8aacff"/>
+    <circle cx="0" cy="-4" r="5"   fill="#c8d8ff" opacity="0.9"/>
+    <circle cx="0" cy="-4" r="2.5" fill="#e8f0ff"/>
+    <circle cx="-1" cy="-5" r="1"  fill="#fff"/>
+    <ellipse cx="-55" cy="-20" rx="12" ry="20" fill="#6080ff" opacity="0.18" transform="rotate(-25 -55 -20)"/>
+    <ellipse cx="55"  cy="-20" rx="12" ry="20" fill="#6080ff" opacity="0.18" transform="rotate(25 55 -20)"/>
+  </g>
+</g>
+
+<!-- =============================== -->
+<!-- ESCENA 2: FELIZ CUMPLEAÑOS      -->
+<!-- =============================== -->
+<g class="scene2">
+  <g class="SF3" transform="translate(60,90)">
+    <line x1="0" y1="0" x2="-55" y2="-28" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="2.2" fill="#fff"/>
+  </g>
+  <g class="SF4" transform="translate(620,65)">
+    <line x1="0" y1="0" x2="48" y2="-24" stroke="#fffde0" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="1.8" fill="#fffde0"/>
+  </g>
+  <circle cx="120" cy="230" r="2"   fill="#ffd966" class="sp2"/>
+  <circle cx="560" cy="220" r="2.2" fill="#ffee88" class="sp2" style="animation-delay:0.6s"/>
+  <circle cx="90"  cy="315" r="1.8" fill="#fff"    class="sp2" style="animation-delay:1.2s"/>
+  <circle cx="590" cy="325" r="2"   fill="#ffd966" class="sp2" style="animation-delay:1.8s"/>
+  <circle cx="180" cy="420" r="1.8" fill="#ffee88" class="sp2" style="animation-delay:0.4s"/>
+  <circle cx="500" cy="415" r="2"   fill="#fff"    class="sp2" style="animation-delay:1s"/>
+  <circle cx="240" cy="455" r="1.8" fill="#ffd966" class="sp2" style="animation-delay:0.8s"/>
+  <circle cx="440" cy="450" r="2"   fill="#ffee88" class="sp2" style="animation-delay:2s"/>
+
+  <g class="w1 gg">
+    <text x="340" y="242" text-anchor="middle" font-family="Georgia,serif" font-size="44" font-weight="bold" fill="#ffffff" letter-spacing="7">FELIZ</text>
+  </g>
+  <g class="w2 gg">
+    <text x="340" y="308" text-anchor="middle" font-family="Georgia,serif" font-size="30" font-weight="bold" fill="#ffd966" letter-spacing="4">CUMPLEAÑOS</text>
+  </g>
+  <g class="w3 gg">
+    <text x="340" y="385" text-anchor="middle" font-family="Georgia,serif" font-size="54" font-weight="bold" font-style="italic" fill="#ffe88a" letter-spacing="5">Victoria</text>
+    <line x1="155" y1="404" x2="525" y2="404" stroke="#cc9900" stroke-width="0.8" opacity="0.6"/>
+    <circle cx="155" cy="404" r="2.5" fill="#ffd966" opacity="0.8"/>
+    <circle cx="525" cy="404" r="2.5" fill="#ffd966" opacity="0.8"/>
+    <circle cx="340" cy="404" r="2"   fill="#fff"    opacity="0.6"/>
+  </g>
+</g>
+
+<!-- =============================== -->
+<!-- ESCENA 3: TEXTO MOTIVACIONAL    -->
+<!-- =============================== -->
+<g class="scene3">
+  <g class="SF5" transform="translate(120,50)">
+    <line x1="0" y1="0" x2="-45" y2="-22" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="1.5" fill="#fff"/>
+  </g>
+  <g class="SF3" transform="translate(560,80)">
+    <line x1="0" y1="0" x2="40" y2="-20" stroke="#fffde0" stroke-width="1.6" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="1.8" fill="#fffde0"/>
+  </g>
+  <circle cx="55"  cy="260" r="1.8" fill="#ffd966" class="sp2" style="animation-delay:0.3s"/>
+  <circle cx="625" cy="280" r="2"   fill="#fff"    class="sp2" style="animation-delay:1s"/>
+  <circle cx="80"  cy="420" r="1.5" fill="#ffd966" class="sp2" style="animation-delay:1.8s"/>
+  <circle cx="600" cy="430" r="1.8" fill="#ffee88" class="sp2" style="animation-delay:0.7s"/>
+
+  <g class="p1 cg">
+    <text x="340" y="140" text-anchor="middle" font-family="Georgia,serif" font-size="15.5" fill="#ffffff" letter-spacing="0.5">Avanza consumiendo aquello que intenta detenerte.</text>
+  </g>
+  <g class="p2 cg">
+    <text x="340" y="200" text-anchor="middle" font-family="Georgia,serif" font-size="15.5" fill="#ffd966" letter-spacing="0.5">Brilla mientras tus sueños se acercan</text>
+    <text x="340" y="224" text-anchor="middle" font-family="Georgia,serif" font-size="15.5" fill="#ffd966" letter-spacing="0.5">cada vez más y más.</text>
+  </g>
+  <g class="p3 cg">
+    <text x="340" y="278" text-anchor="middle" font-family="Georgia,serif" font-size="15.5" fill="#ffe88a" letter-spacing="0.5">Recuerda que cada uno es el protagonista</text>
+    <text x="340" y="302" text-anchor="middle" font-family="Georgia,serif" font-size="15.5" fill="#ffe88a" letter-spacing="0.5">de su propia historia —</text>
+    <text x="340" y="326" text-anchor="middle" font-family="Georgia,serif" font-size="15.5" fill="#ffe88a" letter-spacing="0.5">solo es cuestión de reclamar ese papel.</text>
+  </g>
+  <g class="p4 cg">
+    <text x="340" y="378" text-anchor="middle" font-family="Georgia,serif" font-size="15.5" fill="#ffffff" letter-spacing="0.5">Sigue brillando por tus sueños,</text>
+    <text x="340" y="402" text-anchor="middle" font-family="Georgia,serif" font-size="15.5" fill="#ffffff" letter-spacing="0.5">porque el universo pertenece a quienes</text>
+    <text x="340" y="426" text-anchor="middle" font-family="Georgia,serif" font-size="15.5" fill="#ffffff" letter-spacing="0.5">se atreven a perseguirlo.</text>
+  </g>
+  <g class="p5 cg">
+    <line x1="175" y1="454" x2="505" y2="454" stroke="#cc9900" stroke-width="0.6" opacity="0.5"/>
+    <text x="340" y="485" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="bold" font-style="italic" fill="#ffd966" letter-spacing="1.5">Conquista el cosmos y sé la luz</text>
+    <text x="340" y="510" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="bold" font-style="italic" fill="#ffd966" letter-spacing="1.5">que todos admiran. ✦</text>
+    <line x1="175" y1="525" x2="505" y2="525" stroke="#cc9900" stroke-width="0.6" opacity="0.5"/>
+    <circle cx="175" cy="525" r="2" fill="#ffd966" opacity="0.7"/>
+    <circle cx="505" cy="525" r="2" fill="#ffd966" opacity="0.7"/>
+  </g>
+</g>
+
+</svg>
+</div>
+
+<button class="replay" id="rB" onclick="location.reload()">↻ Repetir</button>
+</div>
+</body>
+</html>
